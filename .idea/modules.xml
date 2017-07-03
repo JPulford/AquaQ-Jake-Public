@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/.idea/AquaQ-Jake-Public.iml" filepath="$PROJECT_DIR$/.idea/AquaQ-Jake-Public.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/JavaChallenges/JavaChallenges.iml" filepath="$PROJECT_DIR$/JavaChallenges/JavaChallenges.iml" />
+>>>>>>> e8323a9a40e9313af420d8fe787ff86aa90a188b
     </modules>
   </component>
 </project>
