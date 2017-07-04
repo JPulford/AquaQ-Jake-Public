@@ -2,10 +2,6 @@ package java_challenge_1;
 
 import java.io.*;
 
-
-/**
- * Created by Jake.Pulford on 13/06/2017.
- */
 public class PartBAsciiAdder {
 
     /**
@@ -13,7 +9,7 @@ public class PartBAsciiAdder {
      * @param fileNameIn
      * @param fileNameOut
      */
-    public void getAsciiValues(String fileNameIn, String fileNameOut) {
+    public void getAsciiValues(final String fileNameIn, final String fileNameOut) {
 
         BufferedReader br;
         FileReader fr;
@@ -48,14 +44,8 @@ public class PartBAsciiAdder {
             fw.close();
 
         } catch (IOException ioException) {
-            System.out.println("Error");
+            System.out.println(ioException.getMessage());
 
         }
-
-
-
-
-
-
     }
 }

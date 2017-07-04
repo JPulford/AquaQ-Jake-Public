@@ -2,9 +2,6 @@ package java_challenge_1;
 
 import java.io.*;
 
-/**
- * Created by Jake.Pulford on 19/06/2017.
- */
 public class PartDRemoveBlanks {
 
     /**
@@ -12,7 +9,7 @@ public class PartDRemoveBlanks {
      * @param fileNameIn
      * @param fileNameOut
      */
-    public void removeBlanks(String fileNameIn, String fileNameOut) {
+    public void removeBlanks(final String fileNameIn, final String fileNameOut) {
 
         BufferedReader br;
         FileReader fr;
@@ -47,7 +44,7 @@ public class PartDRemoveBlanks {
             fw.close();
 
         } catch (IOException ioException) {
-            System.out.println("Error");
+            System.out.println(ioException.getMessage());
 
         }
     }

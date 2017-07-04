@@ -4,9 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-/**
- * Created by Jake.Pulford on 13/06/2017.
- */
 public class PartASumValues {
 
     /**
@@ -14,7 +11,7 @@ public class PartASumValues {
      * @param fileName
      * @return sum total of numerical values in file
      */
-    public int sumTotal(String fileName)  {
+    public int sumTotal(final String fileName)  {
 
         BufferedReader br;
         FileReader fr;
@@ -45,7 +42,7 @@ public class PartASumValues {
             }
 
         } catch (IOException ioException) {
-            System.out.println("Error - I/O exception");
+            System.out.println(ioException.getMessage());
         }
 
         return totalValue;

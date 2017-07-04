@@ -4,9 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Created by Jake.Pulford on 13/06/2017.
- */
 public class PartCOrder {
 
     /**
@@ -14,7 +11,7 @@ public class PartCOrder {
      * @param fileNameIn
      * @param fileNameOut
      */
-    public void orderNumbersInFile(String fileNameIn, String fileNameOut) {
+    public void orderNumbersInFile(final String fileNameIn, final String fileNameOut) {
         BufferedReader br;
         FileReader fr;
         FileWriter fw;
@@ -67,7 +64,7 @@ public class PartCOrder {
             fw.close();
 
         } catch (IOException ioException) {
-            System.out.println("Error");
+            System.out.println(ioException.getMessage());
         }
     }
 }
