@@ -45,7 +45,6 @@ public class PartDRemoveBlanks {
 
         } catch (IOException ioException) {
             System.out.println(ioException.getMessage());
-
         }
     }
 }

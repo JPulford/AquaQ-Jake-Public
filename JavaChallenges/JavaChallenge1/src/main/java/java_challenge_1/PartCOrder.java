@@ -40,6 +40,7 @@ public class PartCOrder {
                     }
                 } catch (NumberFormatException numberFormatException) {
                     // not an integer
+                    System.out.println("Non-numerical character ignored");
                 }
             }
 

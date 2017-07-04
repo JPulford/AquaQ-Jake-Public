@@ -30,6 +30,7 @@ public class PartBAsciiAdder {
                 // empty lines are not processed
                 if (!currentLine.isEmpty()) {
                     lineValue = currentLine.charAt(0);
+                    // convert value read in to char, then cast to int to return ascii value
                     ascii = (int) lineValue;
                     toWriteToFile = currentLine + "    " + ascii;
                     System.out.println(toWriteToFile);
