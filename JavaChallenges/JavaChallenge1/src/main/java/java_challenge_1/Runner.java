@@ -17,11 +17,9 @@ public class Runner {
         PartDRemoveBlanks partD = new PartDRemoveBlanks();
 
         partA.sumTotal(fileNameIn);
-        partB.getAsciiValues(fileNameIn, "num2.txt" );
-        partC.orderNumbersInFile(fileNameIn, "num3.txt");
-        partD.removeBlanks(fileNameIn, "num4.txt");
-
-
+        partB.getAsciiValues(fileNameIn, "src/main/resources/num2.txt" );
+        partC.orderNumbersInFile(fileNameIn, "src/main/resources/num3.txt");
+        partD.removeBlanks(fileNameIn, "src/main/resources/num4.txt");
 
     }
 }
