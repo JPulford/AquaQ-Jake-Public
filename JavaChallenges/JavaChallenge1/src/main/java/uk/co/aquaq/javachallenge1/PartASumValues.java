@@ -17,7 +17,7 @@ public class PartASumValues {
         for (int lineNumber = 0; lineNumber < stringsFromFile.size(); lineNumber++) {
             String line = stringsFromFile.get(lineNumber);
             // match only lines containing numbers, excluding empty lines
-            if (line.matches("[0-9]+") && line.length() >= 1) {
+            if (line.matches("[0-9]+")) {
                 System.out.println("Line " + (lineNumber + 1) + " contains value of " + line);
                 valueHeldInCurrentLine = Integer.parseInt(line);
             } else {
@@ -27,7 +27,6 @@ public class PartASumValues {
             totalValue += valueHeldInCurrentLine;
             valueHeldInCurrentLine = 0;
         }
-
         return totalValue;
     }
 }

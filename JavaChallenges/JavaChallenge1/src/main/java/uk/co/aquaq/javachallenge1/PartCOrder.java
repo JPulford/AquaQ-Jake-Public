@@ -1,8 +1,6 @@
 package uk.co.aquaq.javachallenge1;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class PartCOrder {
 
@@ -21,6 +19,7 @@ public class PartCOrder {
         String textToWrite;
         ArrayList<String> sortedArray;
         ArrayList<String> textFileArray;
+        LinkedHashMap<Integer, String> mapOfValues = new LinkedHashMap<>();
 
         sortedArray = new ArrayList<String>();
         textFileArray = new ArrayList<String>();
@@ -29,19 +28,30 @@ public class PartCOrder {
         for (int lineNumber = 0; lineNumber < stringsFromFile.size(); lineNumber++) {
             String line = stringsFromFile.get(lineNumber);
 
-            if (!line.isEmpty()) {
-                textFileArray.add(line);
-            }
-        }
-        // create a new arraylist that will be sorted
-        sortedArray = new ArrayList<String>(textFileArray);
+            textFileArray.add(line);
 
+        }
+
+        // to remove duplicates
+        Set sortedSet = new HashSet<String>(textFileArray);
+        // to remove duplicates
+        sortedArray = new ArrayList<String>(sortedSet);
+        // sorted in order
         Collections.sort(sortedArray);
 
         // in loop, retrieve sorted values and combine with its original index, then write to file
-        for (int i = 0; i < sortedArray.size(); i++) {
+        for (int i = 0; i < textFileArray.size(); i++) {
+            int intLineValue;
             String lineValue = textFileArray.get(i);
-            textToWrite = lineValue + "   " + sortedArray.indexOf(lineValue);
+
+            if (!lineValue.isEmpty()) {
+                textToWrite = lineValue + " from line " + (i+1) + " order is " + (sortedArray.indexOf(lineValue));
+
+            } else {
+                // for empty lines, to show original position
+                textToWrite = "Empty line";
+            }
+
             fileWriter.writeToFile(textToWrite);
         }
         fileWriter.closeFileWriter();
