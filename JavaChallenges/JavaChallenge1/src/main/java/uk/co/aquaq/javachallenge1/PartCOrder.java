@@ -14,7 +14,7 @@ public class PartCOrder {
 
     /**
      * Orders values contained within file by outputting a new ordered file
-     * @param stringsFromFile
+     * @param stringsFromFile - strings read from each line of file
      */
     public void orderNumbersInFile(final List<String> stringsFromFile) {
 
