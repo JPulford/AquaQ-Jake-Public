@@ -5,9 +5,9 @@ const React = require('react');
 const ReactDOM = require('react-dom')
 const when = require('when');
 const client = require('./client');
-
-// missing from guide
 const follow = require('./follow');
+
+const stompClient = require('./websocket-listener');
 
 const root = '/api';
 
@@ -21,12 +21,14 @@ class App extends React.Component {
     // missing parts from guide
 	constructor(props) {
     	super(props);
-    	this.state = {employees: [], attributes: [], pageSize: 2, links: {}};
+    	this.state = {employees: [], attributes: [], page: 1, pageSize: 2, links: {}};
     	this.updatePageSize = this.updatePageSize.bind(this);
     	this.onCreate = this.onCreate.bind(this);
     	this.onUpdate = this.onUpdate.bind(this);
     	this.onDelete = this.onDelete.bind(this);
     	this.onNavigate = this.onNavigate.bind(this);
+    	this.refreshCurrentPage = this.refreshCurrentPage.bind(this);
+        this.refreshAndGoToLastPage = this.refreshAndGoToLastPage.bind(this);
     }
 
     // reload entire list of employees when the page size is updated
@@ -54,6 +56,9 @@ class App extends React.Component {
         			return employeeCollection;
         		});
         	}).then(employeeCollection => {
+        	    // part 4
+        	    this.page = employeeCollection.entity.page;
+
         	    // converts the collection of employees into an array of GET promises to fetch
         	    // each individual resource
         	    // This is what you need to fetch an ETag header for each employee
@@ -69,6 +74,8 @@ class App extends React.Component {
         	}).done(employees => {
         	    // UI state updated
         		this.setState({
+        		    // part 4
+        		    page: this.page,
         			employees: employees,
         			attributes: Object.keys(this.schema.properties),
         			pageSize: pageSize,
@@ -123,7 +130,19 @@ class App extends React.Component {
     	});
     }*/
 
+    // take out old code which includes updating UI state (commented out portion)
     onCreate(newEmployee) {
+    	follow(client, root, ['employees']).done(response => {
+    		client({
+    			method: 'POST',
+    			path: response.entity._links.self.href,
+    			entity: newEmployee,
+    			headers: {'Content-Type': 'application/json'}
+    		})
+    	})
+    }
+
+    /*onCreate(newEmployee) {
     		var self = this;
     		follow(client, root, ['employees']).then(response => {
     			return client({
@@ -141,7 +160,7 @@ class App extends React.Component {
     				this.onNavigate(response.entity._links.self.href);
     			}
     		});
-    }
+    }*/
 
     // when update button is pressed
     onUpdate(employee, updatedEmployee) {
@@ -154,7 +173,8 @@ class App extends React.Component {
     			'If-Match': employee.headers.Etag
     		}
     	}).done(response => {
-    			this.loadFromServer(this.state.pageSize);
+    			//this.loadFromServer(this.state.pageSize);
+    			// now let websocket handler update the state instead
     	}, response => {
     		if (response.status.code === 412) {
     			alert('DENIED: Unable to update ' +
@@ -165,9 +185,11 @@ class App extends React.Component {
 
     // when delete button is pressed. Note that the path is employee.entity, for getting the specific reference
     onDelete(employee) {
-    	client({method: 'DELETE', path: employee.entity._links.self.href}).done(response => {
-    		this.loadFromServer(this.state.pageSize);
-    	});
+    	client({method: 'DELETE', path: employee.entity._links.self.href});
+    	// part 4, don't need response here
+      /*.done(response => {
+            		this.loadFromServer(this.state.pageSize);
+      });*/
     }
 
     // also uses the GET promises approach
@@ -177,6 +199,9 @@ class App extends React.Component {
     			path: navUri
     		}).then(employeeCollection => {
     			this.links = employeeCollection.entity._links;
+
+    			// part 4
+    			this.page = employeeCollection.entity.page;
 
     			return employeeCollection.entity._embedded.employees.map(employee =>
     					client({
@@ -188,6 +213,8 @@ class App extends React.Component {
     			return when.all(employeePromises);
     		}).done(employees => {
     			this.setState({
+    			    //part 4
+    			    page: this.page,
     				employees: employees,
     				attributes: Object.keys(this.schema.properties),
     				pageSize: this.state.pageSize,
@@ -213,9 +240,59 @@ class App extends React.Component {
     	}
     }
 
+    refreshAndGoToLastPage(message) {
+    	follow(client, root, [{
+    		rel: 'employees',
+    		params: {size: this.state.pageSize}
+    	}]).done(response => {
+    		if (response.entity._links.last !== undefined) {
+    			this.onNavigate(response.entity._links.last.href);
+    		} else {
+    			this.onNavigate(response.entity._links.self.href);
+    		}
+    	})
+    }
+
+    refreshCurrentPage(message) {
+    	follow(client, root, [{
+    		rel: 'employees',
+    		params: {
+    			size: this.state.pageSize,
+    			page: this.state.page.number
+    		}
+    	}]).then(employeeCollection => {
+    		this.links = employeeCollection.entity._links;
+    		this.page = employeeCollection.entity.page;
+
+    		return employeeCollection.entity._embedded.employees.map(employee => {
+    			return client({
+    				method: 'GET',
+    				path: employee._links.self.href
+    			})
+    		});
+    	}).then(employeePromises => {
+    		return when.all(employeePromises);
+    	}).then(employees => {
+    		this.setState({
+    			page: this.page,
+    			employees: employees,
+    			attributes: Object.keys(this.schema.properties),
+    			pageSize: this.state.pageSize,
+    			links: this.links
+    		});
+    	});
+    }
+
 	componentDidMount() {
 
     	this.loadFromServer(this.state.pageSize);
+
+    	// registering for websocket events
+    	stompClient.register([
+        		{route: '/topic/newEmployee', callback: this.refreshAndGoToLastPage},
+        		{route: '/topic/updateEmployee', callback: this.refreshCurrentPage},
+        		{route: '/topic/deleteEmployee', callback: this.refreshCurrentPage}
+        	]);
 
         // previously, employees were loaded in here directly
 		/*client({method: 'GET', path: '/api/employees'}).done(response => {
@@ -228,14 +305,15 @@ class App extends React.Component {
 		return (
         	<div>
         		<CreateDialog attributes={this.state.attributes} onCreate={this.onCreate}/>
-        		<EmployeeList employees={this.state.employees}
-        				links={this.state.links}
-        				pageSize={this.state.pageSize}
-        				attributes={this.state.attributes}
-        				onNavigate={this.onNavigate}
-        				onUpdate={this.onUpdate}
-        				onDelete={this.onDelete}
-        				updatePageSize={this.updatePageSize}/>
+        		<EmployeeList page={this.state.page}
+                							  employees={this.state.employees}
+                							  links={this.state.links}
+                							  pageSize={this.state.pageSize}
+                							  attributes={this.state.attributes}
+                							  onNavigate={this.onNavigate}
+                							  onUpdate={this.onUpdate}
+                							  onDelete={this.onDelete}
+                							  updatePageSize={this.updatePageSize}/>
         	</div>
         )
 	}
@@ -273,9 +351,9 @@ class CreateDialog extends React.Component {
     // converts the array of JSON Schema attributes into an array of HTML inputs
 	render() {
 		var inputs = this.props.attributes.map(attribute =>
-			<p key={attribute}>
-				<input type="text" placeholder={attribute} ref={attribute} className="field" />
-			</p>
+			    <p key={attribute}>
+				    <input type="text" placeholder={attribute} ref={attribute} className="field" />
+			    </p>
 		);
 
         // <div> is anchor tag for the button to open the dialog
@@ -340,6 +418,7 @@ class UpdateDialog extends React.Component {
 		return (
 			<div key={this.props.employee.entity._links.self.href}>
 				<a href={"#" + dialogId}>Update</a>
+
 				<div id={dialogId} className="modalDialog">
 					<div>
 						<a href="#" title="Close" className="close">X</a>
@@ -355,8 +434,8 @@ class UpdateDialog extends React.Component {
 			</div>
 		)
 	}
-};
 
+}
 
 // tag::employee-list[]
 class EmployeeList extends React.Component{
@@ -384,7 +463,7 @@ class EmployeeList extends React.Component{
 
     // pressed, navigates to first href (first employee stored)
 
-	handleNavFirst(e){
+	handleNavFirst(e) {
         e.preventDefault();
         this.props.onNavigate(this.props.links.first.href);
     }
@@ -407,6 +486,9 @@ class EmployeeList extends React.Component{
 // The employee state data is included in creation of the <EmployeeList /> React component as an input parameter
 
 	render() {
+	    var pageInfo = this.props.page.hasOwnProperty("number") ?
+        			<h3>Employees - Page {this.props.page.number + 1} of {this.props.page.totalPages}</h3> : null;
+
 		var employees = this.props.employees.map(employee =>
         		<Employee key={employee.entity._links.self.href}
                 			    employee={employee}
@@ -434,6 +516,7 @@ class EmployeeList extends React.Component{
             // Table headings
         	return (
         		<div>
+        		    {pageInfo}
         			<input ref="pageSize" defaultValue={this.props.pageSize} onInput={this.handleInput}/>
         			<table>
         				<tbody>
